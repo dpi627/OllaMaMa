@@ -44,6 +44,11 @@
       <div class="panel__head">
         <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
         <h2>電腦配置輸入</h2>
+        <label class="switch">
+          <input type="checkbox" id="expert-toggle" checked />
+          <span class="switch__track"><span class="switch__thumb"></span></span>
+          <span class="switch__label">專家模式</span>
+        </label>
       </div>
 
       <div class="field">
@@ -79,12 +84,6 @@
       </div>
 
       <div class="expert">
-        <label class="switch">
-          <input type="checkbox" id="expert-toggle" checked />
-          <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span class="switch__label">專家模式 <em>Expert</em></span>
-        </label>
-
         <div class="expert__body" id="expert-body">
           <div class="field">
             <label>
@@ -212,18 +211,18 @@
       <div class="stats">
         <div class="stat">
           <i data-lucide="layers" aria-hidden="true"></i>
-          <b class="mono" id="stat-models">--</b>
           <span>模型載入極限</span>
+          <b class="mono" id="stat-models">--</b>
         </div>
         <div class="stat">
           <i data-lucide="users" aria-hidden="true"></i>
-          <b class="mono" id="stat-users">--</b>
           <span>併發人數上限</span>
+          <b class="mono" id="stat-users">--</b>
         </div>
         <div class="stat">
           <i data-lucide="scroll-text" aria-hidden="true"></i>
-          <b class="mono" id="stat-context">--</b>
           <span>每人 Context 上限</span>
+          <b class="mono" id="stat-context">--</b>
         </div>
       </div>
 

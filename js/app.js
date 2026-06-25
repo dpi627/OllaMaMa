@@ -6,6 +6,7 @@
 import {
   computeCapacity, DEFAULT_STATE,
   MODEL_PRESETS, QUANT_PRESETS, CONTEXT_PRESETS, KV_PRESETS, USE_CASES,
+  USE_CASE_PRESETS,
 } from './engine.js';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -16,10 +17,12 @@ const state = { ...DEFAULT_STATE };
 
 const $ = (id) => document.getElementById(id);
 const SCENARIO_META = {
-  chat:  { label: 'Chat',   sub: '一般聊天', icon: 'messages-square' },
-  coding:{ label: 'Coding', sub: '軟體開發', icon: 'code-xml' },
-  ocr:   { label: 'OCR',    sub: '文字辨識', icon: 'scan-text' },
-  audio: { label: 'Audio',  sub: '語音轉文字', icon: 'mic' },
+  chat:        { label: 'Chat',        sub: '一般聊天', icon: 'messages-square' },
+  coding:      { label: 'Coding',      sub: '軟體開發', icon: 'code-xml' },
+  translation: { label: 'Translation', sub: '翻譯與在地化', icon: 'languages' },
+  rag:         { label: 'RAG',         sub: '知識庫與檢索', icon: 'book-open' },
+  ocr:         { label: 'OCR',         sub: '文字辨識', icon: 'scan-text' },
+  audio:       { label: 'Audio',       sub: '語音轉文字', icon: 'mic' },
 };
 
 const STAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 16.6 14 18.6 21 12 17 5.4 21 7.4 14 2 9.3 9 9"/></svg>';
@@ -49,13 +52,54 @@ function buildControls() {
     const stars = Array.from({ length: 5 }, () => `<span class="star">${STAR_SVG}</span>`).join('');
     return `<div class="scenario" data-key="${key}">
       <i data-lucide="${m.icon}" class="sc-ico" aria-hidden="true"></i>
-      <div class="scenario__name">${m.label}<small>${m.sub}</small></div>
-      <div class="scenario__meta">
-        <span class="stars" data-stars="${key}">${stars}</span>
+      <div class="scenario__content">
+        <div class="scenario__header">
+          <div class="scenario__name">${m.label}<small>${m.sub}</small></div>
+          <span class="stars" data-stars="${key}">${stars}</span>
+        </div>
         <span class="scenario__reason" data-reason="${key}"></span>
       </div>
     </div>`;
   }).join('');
+}
+
+function syncUIFromState() {
+  // Sync params slider
+  const pr = $('in-params');
+  pr.value = MODEL_PRESETS.findIndex((m) => m.params === state.params);
+  $('val-params').textContent = state.params + 'B';
+  const m = MODEL_PRESETS[+pr.value];
+  if (m) {
+    $('note-params').textContent = m.name;
+  }
+  setRangeFill(pr);
+
+  // Sync context slider
+  const cx = $('in-context');
+  cx.value = CONTEXT_PRESETS.findIndex((c) => c.tokens === state.contextTokens);
+  const c = CONTEXT_PRESETS[+cx.value];
+  if (c) {
+    $('val-context').textContent = c.label;
+  }
+  setRangeFill(cx);
+
+  // Sync quant chips
+  const quantWrap = $('ctrl-quant');
+  quantWrap.querySelectorAll('.chip').forEach((label) => {
+    const input = label.querySelector('input');
+    const checked = input.value === state.quant;
+    input.checked = checked;
+    label.classList.toggle('is-on', checked);
+  });
+
+  // Sync kv chips
+  const kvWrap = $('ctrl-kv');
+  kvWrap.querySelectorAll('.chip').forEach((label) => {
+    const input = label.querySelector('input');
+    const checked = input.value === state.kvPrecision;
+    input.checked = checked;
+    label.classList.toggle('is-on', checked);
+  });
 }
 
 /* =================================================================
@@ -86,7 +130,18 @@ function wireInputs() {
   linkPair('in-ram', 'in-ram-num', 'ram');
   linkPair('in-users', 'in-users-num', 'users');
 
-  $('in-usecase').addEventListener('change', (e) => { state.useCase = e.target.value; update(); });
+  $('in-usecase').addEventListener('change', (e) => {
+    state.useCase = e.target.value;
+    const preset = USE_CASE_PRESETS[state.useCase];
+    if (preset) {
+      state.params = preset.params;
+      state.contextTokens = preset.contextTokens;
+      state.quant = preset.quant;
+      state.kvPrecision = preset.kvPrecision;
+      syncUIFromState();
+    }
+    update();
+  });
 
   // params slider (index -> preset)
   const pr = $('in-params');

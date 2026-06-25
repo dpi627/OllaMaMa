@@ -61,9 +61,50 @@ export const KV_PRESETS = ['f16', 'q8_0', 'q4_0'];
 export const USE_CASES = [
   { key: 'chat', label: 'AI 聊天' },
   { key: 'coding', label: '軟體開發 (Agentic)' },
+  { key: 'translation', label: '翻譯與在地化' },
+  { key: 'rag', label: '知識庫與 RAG' },
   { key: 'ocr', label: 'OCR 文字辨識' },
   { key: 'audio', label: '語音轉文字' },
 ];
+
+export const USE_CASE_PRESETS = {
+  chat: {
+    params: 8,          // Llama3.1 8B
+    contextTokens: 8192, // 8k
+    kvPrecision: 'f16',
+    quant: 'Q4_K_M',
+  },
+  coding: {
+    params: 32,          // Qwen2.5 32B
+    contextTokens: 65536, // 64k
+    kvPrecision: 'f16',
+    quant: 'Q4_K_M',
+  },
+  translation: {
+    params: 8,           // Llama3.1 8B
+    contextTokens: 16384, // 16k
+    kvPrecision: 'f16',
+    quant: 'Q4_K_M',
+  },
+  rag: {
+    params: 14,          // Qwen2.5 14B
+    contextTokens: 32768, // 32k
+    kvPrecision: 'f16',
+    quant: 'Q4_K_M',
+  },
+  ocr: {
+    params: 8,           // Llama3.1 8B / Multi-modal
+    contextTokens: 8192,  // 8k
+    kvPrecision: 'f16',
+    quant: 'Q4_K_M',
+  },
+  audio: {
+    params: 3,           // Llama3.2 3B / Whisper-like size
+    contextTokens: 4096,  // 4k
+    kvPrecision: 'f16',
+    quant: 'Q4_K_M',
+  },
+};
 
 /* ---------- 預設 state ---------- */
 
@@ -188,6 +229,24 @@ export function scoreScenarios(effState, ctx) {
     if (contextTokens >= 32768 && fitRatio <= 1.05) return [4, 'Context 32k 足夠中型任務，超大專案會略短'];
     if (contextTokens >= 16384) return [3, 'Context 偏短，Agent 容易忘記較早的前文'];
     return [2, 'Context 被壓到 <= 8k，AI 馬上忘記前文'];
+  }));
+
+  // 🌐 Translation：需要語系理解力，Context 中等。
+  out.push(scenario('translation', 'Translation', 'languages', () => {
+    if (!modelFitsVRAM) return [2, '模型溢出 VRAM，翻譯延遲較高'];
+    if (params < 7) return [3, '模型偏小，日常翻譯尚可，多語言或專業翻譯較弱'];
+    if (contextTokens < 8192) return [3, 'Context 偏短，長篇文章翻譯易斷頭'];
+    if (fitRatio > 1.0) return [4, '翻譯能力良好，重載時打字會略慢'];
+    return [5, '顯存充足，翻譯流暢、語意精準'];
+  }));
+
+  // 📚 RAG：重視 Context 長度（檢索多段參考文獻）與模型抽取力。
+  out.push(scenario('rag', 'RAG', 'book-open', () => {
+    if (!modelFitsVRAM) return [2, '模型溢出，檢索回應與答覆緩慢'];
+    if (contextTokens < 16384) return [2, 'Context 太小，塞不下足夠的參考文檔'];
+    if (contextTokens >= 32768 && params >= 14 && fitRatio <= 1.0) return [5, 'Context 夠長且模型聰明，擷取文獻答覆品質極佳'];
+    if (contextTokens >= 16384 && fitRatio <= 1.05) return [4, 'Context 適中，堪用作中小型知識庫對答'];
+    return [3, 'Context 或模型大小普通，知識庫檢索能力受限'];
   }));
 
   // 🔍 OCR / 🎙️ Audio：吃快閃算力、不吃長 Context；大模型反而過重。
