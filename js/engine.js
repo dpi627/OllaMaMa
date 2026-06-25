@@ -33,15 +33,15 @@ export const KV_PRECISION_ORDER = ['f16', 'q8_0', 'q4_0']; // 由高到低
 /* ---------- UI 用 preset（供 app.js 建表單） ---------- */
 
 export const MODEL_PRESETS = [
-  { params: 1.5, name: 'Qwen2.5 1.5B' },
-  { params: 3, name: 'Llama3.2 3B' },
-  { params: 7, name: 'Mistral 7B' },
-  { params: 8, name: 'Llama3.1 8B' },
-  { params: 13, name: 'Vicuna 13B' },
-  { params: 14, name: 'Qwen2.5 14B' },
-  { params: 27, name: 'Gemma2 27B' },
-  { params: 32, name: 'Qwen2.5 32B' },
-  { params: 70, name: 'Llama3.3 70B' },
+  { params: 1.5, name: 'DeepSeek-R1-Distill 1.5B' },
+  { params: 3, name: 'Llama3.2 3B (Phi-4-Mini)' },
+  { params: 8, name: 'Llama3.1 8B (DeepSeek-R1-Distill)' },
+  { params: 9, name: 'Gemma2 9B' },
+  { params: 14, name: 'Qwen2.5 14B (Phi-4)' },
+  { params: 32, name: 'Qwen2.5-Coder 32B (DeepSeek-R1-Distill)' },
+  { params: 70, name: 'Llama3.3 70B (DeepSeek-R1-Distill)' },
+  { params: 120, name: 'GPT-OSS 120B' },
+  { params: 671, name: 'DeepSeek-R1 671B (MoE)' },
 ];
 
 export const QUANT_PRESETS = ['Q4_K_M', 'Q5_K_M', 'Q6_K', 'Q8_0'];
@@ -116,7 +116,7 @@ export const DEFAULT_STATE = {
   params: 32,
   quant: 'Q4_K_M',
   contextTokens: 65536,
-  kvPrecision: 'f16',
+  kvPrecision: 'q8_0',
   models: 1,
 };
 
