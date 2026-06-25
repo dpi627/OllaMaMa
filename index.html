@@ -22,79 +22,92 @@
 
   <!-- ============ Top bar ============ -->
   <header class="topbar">
-    <a class="brand" href="#">
-      <span class="brand__mark"><i data-lucide="cpu" aria-hidden="true"></i></span>
-      <span class="brand__text">
-        <strong>OLLAMA</strong><span>Capacity</span>
-      </span>
-    </a>
-    <p class="topbar__tag mono">不只算<b>容量</b>，更能算<b class="o">載量</b>。</p>
-    <div class="topbar__meta">
-      <span class="dot" aria-hidden="true"></span>
-      <span class="topbar__label">LIVE</span>
-      <span class="score-chip" title="即時匹配分數">SCORE <b id="chip-score">--</b></span>
+    <div class="topbar__left">
+      <a class="brand" href="#">
+        <span class="brand__mark"><i data-lucide="cpu" aria-hidden="true"></i></span>
+        <span class="brand__text">
+          <strong>OLLAMA</strong><span>Capacity</span>
+        </span>
+      </a>
+      <p class="topbar__tag mono">不只算<b>容量</b>，更能算<b class="o">載量</b>。</p>
+    </div>
+    
+    <div class="topbar__center">
+      <div class="tb-field">
+        <label for="in-usecase">主要用途</label>
+        <div class="select select--tb">
+          <select id="in-usecase"></select>
+          <i data-lucide="chevron-down" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar__right">
+      <div class="tb-field">
+        <label for="in-users">同時在線人員</label>
+        <div class="tb-field__row">
+          <input type="range" id="in-users" min="1" max="16" step="1" value="2" />
+          <div class="tb-field__num">
+            <input type="number" id="in-users-num" min="1" max="256" value="2" class="num num--tb" />
+            <span class="unit">人</span>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
   <!-- ============ Dashboard ============ -->
   <main class="dash" id="dash">
 
-    <!-- ---- Config ---- -->
-    <section class="panel p-config" aria-label="電腦配置輸入">
-      <div class="panel__head">
-        <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
-        <h2>電腦配置輸入</h2>
-        <label class="switch">
-          <input type="checkbox" id="expert-toggle" checked />
-          <span class="switch__track"><span class="switch__thumb"></span></span>
-          <span class="switch__label">專家模式</span>
-        </label>
-      </div>
-
-      <div class="field">
-        <label for="in-vram">GPU VRAM <span class="unit">GB</span></label>
-        <div class="field__row">
-          <input type="range" id="in-vram" min="2" max="96" step="1" value="24" />
-          <input type="number" id="in-vram-num" min="1" max="1024" value="24" class="num" />
+    <!-- ---- Sidebar ---- -->
+    <div class="dash__sidebar">
+      <!-- ---- Config ---- -->
+      <section class="panel p-config" aria-label="電腦配置">
+        <div class="panel__head">
+          <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+          <h2>電腦配置</h2>
         </div>
-      </div>
 
-      <div class="field">
-        <label for="in-ram">系統 RAM <span class="unit">GB</span></label>
-        <div class="field__row">
-          <input type="range" id="in-ram" min="4" max="256" step="4" value="32" />
-          <input type="number" id="in-ram-num" min="1" max="4096" value="32" class="num" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="in-users">同時在線 <span class="unit">人</span></label>
-        <div class="field__row">
-          <input type="range" id="in-users" min="1" max="16" step="1" value="2" />
-          <input type="number" id="in-users-num" min="1" max="256" value="2" class="num" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="in-usecase">主要用途</label>
-        <div class="select">
-          <select id="in-usecase"></select>
-          <i data-lucide="chevron-down" aria-hidden="true"></i>
-        </div>
-      </div>
-
-      <div class="expert">
-        <div class="expert__body" id="expert-body">
-          <div class="field">
-            <label>
-              模型大小 <span class="unit">Params</span>
-              <button class="info" type="button" data-tip="模型參數量（十億）。通常越大越聰明，但也越吃顯存。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
-              <b class="field__val mono" id="val-params">32B</b>
-            </label>
-            <input type="range" id="in-params" min="0" max="8" step="1" value="7" />
-            <small class="field__note mono" id="note-params">Qwen2.5 32B</small>
+        <div class="field">
+          <label for="in-vram">GPU VRAM <span class="unit">GB</span></label>
+          <div class="field__row">
+            <input type="range" id="in-vram" min="2" max="96" step="1" value="24" />
+            <input type="number" id="in-vram-num" min="1" max="1024" value="24" class="num" />
           </div>
+        </div>
 
+        <div class="field">
+          <label for="in-ram">系統 RAM <span class="unit">GB</span></label>
+          <div class="field__row">
+            <input type="range" id="in-ram" min="4" max="256" step="4" value="32" />
+            <input type="number" id="in-ram-num" min="1" max="4096" value="32" class="num" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- Model Config ---- -->
+      <section class="panel p-model" aria-label="模型配置">
+        <div class="panel__head">
+          <i data-lucide="cpu" aria-hidden="true"></i>
+          <h2>模型配置</h2>
+          <label class="switch">
+            <input type="checkbox" id="expert-toggle" checked />
+            <span class="switch__track"><span class="switch__thumb"></span></span>
+            <span class="switch__label">專家模式</span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label>
+            模型大小 <span class="unit">Params</span>
+            <button class="info" type="button" data-tip="模型參數量（十億）。通常越大越聰明，但也越吃顯存。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
+            <b class="field__val mono" id="val-params">32B</b>
+          </label>
+          <input type="range" id="in-params" min="0" max="8" step="1" value="7" />
+          <small class="field__note mono" id="note-params">Qwen2.5 32B</small>
+        </div>
+
+        <div class="expert__body" id="expert-body">
           <div class="field">
             <label>
               載入模型數 <span class="unit">個</span>
@@ -129,8 +142,8 @@
             <div class="radio-row" id="ctrl-kv" role="radiogroup" aria-label="KV Cache 精度"></div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <!-- ---- Core reactor + score + throughput ---- -->
     <section class="panel p-core" aria-label="即時匹配與吞吐體感">
@@ -227,10 +240,10 @@
       </div>
 
       <!-- 自動優化 -->
-      <div class="autoopt" id="autoopt" hidden>
+      <div class="autoopt" id="autoopt">
         <i data-lucide="wand-sparkles" aria-hidden="true"></i>
         <div style="flex: 1; min-width: 0;">
-          <strong>已啟動自動優化</strong>
+          <strong>啟動優化建議</strong>
           <div id="autoopt-list" class="autoopt-list"></div>
         </div>
       </div>
@@ -266,6 +279,44 @@
             <button class="copy" id="copy-bash" data-target="env-bash"><i data-lucide="copy" aria-hidden="true"></i><span>複製</span></button>
           </div>
           <pre class="mono" id="env-bash"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- Formulas & References ---- -->
+    <section class="panel p-ref" aria-label="計算公式與參考來源">
+      <div class="panel__head">
+        <i data-lucide="book-marked" aria-hidden="true"></i>
+        <h2>計算公式與參考來源</h2>
+      </div>
+      <div class="ref__content">
+        <div class="ref__section">
+          <h3><i data-lucide="calculator" aria-hidden="true"></i> 容量評估公式</h3>
+          <ul class="ref__list">
+            <li>
+              <strong>模型大小 (GB)</strong> 
+              <code>Params × Bytes_Per_Param</code>
+              <span class="ref__desc">FP16 ≈ 2.0G/B, Q8 ≈ 1.06G/B, Q5 ≈ 0.69G/B, Q4 ≈ 0.625G/B</span>
+            </li>
+            <li>
+              <strong>單人 KV Cache (GB)</strong> 
+              <code>Params × Context × KV_Unit × Precision</code>
+              <span class="ref__desc">預設 KV_Unit 為每 B 參數每 Token 耗費約 1.025e-6 GB。精度乘數：FP16 = 1.0, Q8 = 0.5, Q4 = 0.25</span>
+            </li>
+            <li>
+              <strong>顯存總需求 (GB)</strong>
+              <code>模型大小 × N + 單人 KV × 併發數 + 1.5G (預留)</code>
+              <span class="ref__desc">系統預留 1.5 GB 用於 CUDA 初始化及運算激活空間。</span>
+            </li>
+          </ul>
+        </div>
+        <div class="ref__section">
+          <h3><i data-lucide="library" aria-hidden="true"></i> 參考文獻與工程來源</h3>
+          <ul class="ref__links">
+            <li><a href="https://github.com/ollama/ollama/blob/main/docs/faq.md" target="_blank" rel="noopener"><i data-lucide="github"></i> Ollama Concurrency Docs</a></li>
+            <li><a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener"><i data-lucide="external-link"></i> llama.cpp Quantization Benchmarks</a></li>
+            <li><a href="https://arxiv.org/abs/2305.13245" target="_blank" rel="noopener"><i data-lucide="file-text"></i> GQA: Grouped-Query Attention Paper</a></li>
+          </ul>
         </div>
       </div>
     </section>

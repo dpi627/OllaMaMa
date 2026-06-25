@@ -288,12 +288,21 @@ function typewriteList(container, steps) {
   typewriterTimeoutIds = [];
 
   container.innerHTML = '';
-  if (!steps || steps.length === 0) return;
+  const ao = $('autoopt');
+  if (!steps || steps.length === 0) {
+    if (ao) ao.classList.remove('is-typing');
+    return;
+  }
+
+  if (ao) ao.classList.add('is-typing');
 
   let itemIndex = 0;
 
   function typeNextItem() {
-    if (itemIndex >= steps.length) return;
+    if (itemIndex >= steps.length) {
+      if (ao) ao.classList.remove('is-typing');
+      return;
+    }
     const text = steps[itemIndex];
     const item = document.createElement('div');
     item.className = 'autoopt-item';
@@ -321,14 +330,61 @@ function typewriteList(container, steps) {
   typeNextItem();
 }
 
+function sortScenarios(scenarios) {
+  const container = $('scenario-list');
+  const items = Array.from(container.querySelectorAll('.scenario'));
+
+  // 1. Record the First state (bounding rects)
+  const rects = new Map();
+  items.forEach(item => {
+    rects.set(item.dataset.key, item.getBoundingClientRect());
+  });
+
+  // 2. Sort the items in memory based on the computed scenarios stars
+  const scenarioMap = new Map(scenarios.map(s => [s.key, s]));
+  items.sort((a, b) => {
+    const scoreA = scenarioMap.get(a.dataset.key)?.stars || 0;
+    const scoreB = scenarioMap.get(b.dataset.key)?.stars || 0;
+    return scoreB - scoreA; // descending stars
+  });
+
+  // 3. Re-append items in the new order (this updates the DOM)
+  if (!hasGsap || reduced) {
+    items.forEach(item => container.appendChild(item));
+    return;
+  }
+
+  items.forEach(item => container.appendChild(item));
+
+  // 4. Record Last and Invert & Play with GSAP
+  items.forEach(item => {
+    const firstRect = rects.get(item.dataset.key);
+    const lastRect = item.getBoundingClientRect();
+    if (firstRect) {
+      const dy = firstRect.top - lastRect.top;
+      const dx = firstRect.left - lastRect.left;
+      if (dy !== 0 || dx !== 0) {
+        // Animate from inverted position to 0
+        window.gsap.fromTo(item, 
+          { x: dx, y: dy }, 
+          { x: 0, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'transform' }
+        );
+      }
+    }
+  });
+}
+
 function render(r) {
   // ---- score (number + verdict tinted by shared ramp) ----
   const col = rampColor(r.score);
   const snum = $('score-num');
   tweenNum(snum, r.score, (v) => String(Math.round(v)));
   snum.style.color = col;
-  tweenNum($('chip-score'), r.score, (v) => String(Math.round(v)));
-  $('chip-score').style.color = col;
+  const chipScore = $('chip-score');
+  if (chipScore) {
+    tweenNum(chipScore, r.score, (v) => String(Math.round(v)));
+    chipScore.style.color = col;
+  }
   const vEl = $('score-verdict'); vEl.textContent = verdictFor(r.score); vEl.style.color = col;
 
   // ---- hero readout ----
@@ -340,17 +396,20 @@ function render(r) {
   const ao = $('autoopt');
   if (r.optimization.optimized) {
     ao.hidden = false;
+    ao.classList.remove('is-disabled');
     typewriteList($('autoopt-list'), r.optimization.steps);
   } else {
-    ao.hidden = true;
+    ao.hidden = false;
+    ao.classList.add('is-disabled');
+    ao.classList.remove('is-typing');
     typewriterTimeoutIds.forEach(id => clearTimeout(id));
     typewriterTimeoutIds = [];
-    $('autoopt-list').innerHTML = '';
+    $('autoopt-list').innerHTML = '<div class="autoopt-item">硬體配置充足，運作良好。</div>';
     lastStepsStr = '';
   }
 
   // ---- stats ----
-  tweenNum($('stat-models'), r.maxModels, (v) => Math.round(v) + '×');
+  tweenNum($('stat-models'), r.maxModels, (v) => Math.round(v) + ' x');
   tweenNum($('stat-users'), r.maxUsers, (v) => Math.round(v) + ' 人');
   $('stat-context').textContent = r.perUserMaxLabel;
 
@@ -377,6 +436,9 @@ function render(r) {
     const row = document.querySelector(`.scenario[data-key="${sc.key}"]`);
     if (row) row.classList.toggle('is-active', sc.key === r.input.useCase);
   });
+
+  // Sort and animate
+  sortScenarios(r.scenarios);
 
   // ---- env vars ----
   $('env-powershell').textContent = r.env.powershell;

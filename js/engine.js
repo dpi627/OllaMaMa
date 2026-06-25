@@ -496,7 +496,7 @@ export function buildEnvVars(eff, { maxUsers, users }) {
 
 export function tokensLabel(tokens) {
   if (!tokens || tokens <= 0) return '0';
-  if (tokens >= 1024) return `${Math.round(tokens / 1024)}k`;
+  if (tokens >= 1024) return `${Math.round(tokens / 1024)} k`;
   return String(tokens);
 }
 
