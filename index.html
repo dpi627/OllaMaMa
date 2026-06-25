@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OLLAMA Capacity — 本機與多人連線容量評估儀表板</title>
+  <meta name="description" content="不只算容量，更能算載量。一鍵算出本機能跑多大模型、承載幾人連線、Token 吞吐體感。" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ============ Top bar ============ -->
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand__mark"><i data-lucide="cpu" aria-hidden="true"></i></span>
+      <span class="brand__text">
+        <strong>OLLAMA</strong><span>Capacity</span>
+      </span>
+    </a>
+    <p class="topbar__tag mono">不只算<b>容量</b>，更能算<b class="o">載量</b>。</p>
+    <div class="topbar__meta">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="topbar__label">LIVE</span>
+      <span class="score-chip" title="即時匹配分數">SCORE <b id="chip-score">--</b></span>
+    </div>
+  </header>
+
+  <!-- ============ Dashboard ============ -->
+  <main class="dash" id="dash">
+
+    <!-- ---- Config ---- -->
+    <section class="panel p-config" aria-label="電腦配置輸入">
+      <div class="panel__head">
+        <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+        <h2>電腦配置輸入</h2>
+      </div>
+
+      <div class="field">
+        <label for="in-vram">GPU VRAM <span class="unit">GB</span></label>
+        <div class="field__row">
+          <input type="range" id="in-vram" min="2" max="96" step="1" value="24" />
+          <input type="number" id="in-vram-num" min="1" max="1024" value="24" class="num" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="in-ram">系統 RAM <span class="unit">GB</span></label>
+        <div class="field__row">
+          <input type="range" id="in-ram" min="4" max="256" step="4" value="32" />
+          <input type="number" id="in-ram-num" min="1" max="4096" value="32" class="num" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="in-users">同時在線 <span class="unit">人</span></label>
+        <div class="field__row">
+          <input type="range" id="in-users" min="1" max="16" step="1" value="2" />
+          <input type="number" id="in-users-num" min="1" max="256" value="2" class="num" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="in-usecase">主要用途</label>
+        <div class="select">
+          <select id="in-usecase"></select>
+          <i data-lucide="chevron-down" aria-hidden="true"></i>
+        </div>
+      </div>
+
+      <div class="expert">
+        <label class="switch">
+          <input type="checkbox" id="expert-toggle" checked />
+          <span class="switch__track"><span class="switch__thumb"></span></span>
+          <span class="switch__label">專家模式 <em>Expert</em></span>
+        </label>
+
+        <div class="expert__body" id="expert-body">
+          <div class="field">
+            <label>
+              模型大小 <span class="unit">Params</span>
+              <button class="info" type="button" data-tip="模型參數量（十億）。通常越大越聰明，但也越吃顯存。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
+              <b class="field__val mono" id="val-params">32B</b>
+            </label>
+            <input type="range" id="in-params" min="0" max="8" step="1" value="7" />
+            <small class="field__note mono" id="note-params">Qwen2.5 32B</small>
+          </div>
+
+          <div class="field">
+            <label>
+              載入模型數 <span class="unit">個</span>
+              <button class="info" type="button" data-tip="同時載入的目標模型數量。Ollama 預設只載入 1 個，多模型可同時服務不同請求。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
+              <b class="field__val mono" id="val-models">1</b>
+            </label>
+            <input type="range" id="in-models" min="1" max="4" step="1" value="1" />
+          </div>
+
+          <div class="field">
+            <label>
+              模型量化 <span class="unit">Quant</span>
+              <button class="info" type="button" data-tip="模型壓縮率。Q4 為黃金平衡，檔案縮小 1/4 但智商幾乎不減。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
+            </label>
+            <div class="radio-row" id="ctrl-quant" role="radiogroup" aria-label="模型量化"></div>
+          </div>
+
+          <div class="field">
+            <label>
+              Context Window
+              <button class="info" type="button" data-tip="AI 的記憶長度。軟體開發 Agent 強烈建議 64k 以上。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
+              <b class="field__val mono" id="val-context">64k</b>
+            </label>
+            <input type="range" id="in-context" min="0" max="6" step="1" value="5" />
+          </div>
+
+          <div class="field">
+            <label>
+              KV Cache 精度
+              <button class="info" type="button" data-tip="儲存對話記憶的精度。長對話建議設為 q8_0 可省下一半顯存。" aria-label="說明"><i data-lucide="info" aria-hidden="true"></i></button>
+            </label>
+            <div class="radio-row" id="ctrl-kv" role="radiogroup" aria-label="KV Cache 精度"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- Core reactor + score + throughput ---- -->
+    <section class="panel p-core" aria-label="即時匹配與吞吐體感">
+      
+      <div class="tp" id="tp">
+        <div class="report__sub"><i data-lucide="zap" aria-hidden="true"></i> Token 吞吐體感</div>
+        <div class="tp__head">
+          <span class="tp__badge" id="tp-badge"><i data-lucide="gauge" aria-hidden="true"></i><b id="tp-label">--</b></span>
+          <span class="tp__ts mono"><b id="tp-ts">--</b> tokens/s</span>
+        </div>
+        <div class="tp__meter"><span class="tp__fill" id="tp-fill"></span></div>
+        <p class="tp__blurb" id="tp-blurb"></p>
+      </div>
+
+      <div class="core__stage">
+        <canvas id="hero-canvas" aria-hidden="true"></canvas>
+        <div class="hero__fallback" id="hero-fallback" aria-hidden="true"><div class="poly"></div></div>
+        <div class="core__overlay">
+          <b class="mono" id="score-num">--</b>
+          <span>匹配分數 / SCORE</span>
+          <p class="core__verdict" id="score-verdict">計算中…</p>
+        </div>
+        <div class="hero__readout mono" id="hero-readout">
+          <span>VRAM <b id="ro-vram">24</b>G</span>
+          <span>FIT <b id="ro-fit">0.98</b></span>
+          <span>LOAD <b id="ro-load">98</b>%</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ---- Memory allocation map ---- -->
+    <section class="panel p-mem" aria-label="記憶體載量分配">
+      <div class="panel__head">
+        <i data-lucide="database" aria-hidden="true"></i>
+        <h2>記憶體載量分配</h2>
+        <span class="mem-alloc__badge" id="mem-status-badge">全 VRAM 運行</span>
+      </div>
+
+      <div class="mem-bar-group">
+        <!-- VRAM Bar -->
+        <div class="mem-bar-container">
+          <div class="mem-bar-label">
+            <span>GPU 顯存 (VRAM)</span>
+            <span class="mono" id="vram-bar-text">0 / 24 GB</span>
+          </div>
+          <div class="mem-bar" id="vram-bar"></div>
+        </div>
+
+        <!-- RAM Bar -->
+        <div class="mem-bar-container">
+          <div class="mem-bar-label">
+            <span>系統記憶體 (RAM)</span>
+            <span class="mono" id="ram-bar-text">0 / 32 GB</span>
+          </div>
+          <div class="mem-bar" id="ram-bar"></div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="mem-legend">
+        <div class="legend-item"><span class="legend-color legend-color--reserve"></span>GPU 預留</div>
+        <div class="legend-item"><span class="legend-color legend-color--model-vram"></span>模型 (VRAM)</div>
+        <div class="legend-item"><span class="legend-color legend-color--model-ram"></span>模型 (RAM)</div>
+        <div class="legend-item"><span class="legend-color legend-color--kv-vram"></span>用戶對話 (VRAM)</div>
+        <div class="legend-item"><span class="legend-color legend-color--kv-ram"></span>用戶對話 (RAM)</div>
+        <div class="legend-item"><span class="legend-color legend-color--free"></span>空閒</div>
+      </div>
+    </section>
+
+    <!-- ---- Capacity stats ---- -->
+    <section class="panel p-stats" aria-label="資源承載力極限">
+      <div class="panel__head">
+        <i data-lucide="battery-charging" aria-hidden="true"></i>
+        <h2>資源承載力極限</h2>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <i data-lucide="layers" aria-hidden="true"></i>
+          <b class="mono" id="stat-models">--</b>
+          <span>模型載入極限</span>
+        </div>
+        <div class="stat">
+          <i data-lucide="users" aria-hidden="true"></i>
+          <b class="mono" id="stat-users">--</b>
+          <span>併發人數上限</span>
+        </div>
+        <div class="stat">
+          <i data-lucide="scroll-text" aria-hidden="true"></i>
+          <b class="mono" id="stat-context">--</b>
+          <span>每人 Context 上限</span>
+        </div>
+      </div>
+
+      <!-- 自動優化 -->
+      <div class="autoopt" id="autoopt" hidden>
+        <i data-lucide="wand-sparkles" aria-hidden="true"></i>
+        <div style="flex: 1; min-width: 0;">
+          <strong>已啟動自動優化</strong>
+          <div id="autoopt-list" class="autoopt-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- Scenarios ---- -->
+    <section class="panel p-scen" aria-label="情境適用度">
+      <div class="panel__head">
+        <i data-lucide="target" aria-hidden="true"></i>
+        <h2>情境適用度</h2>
+      </div>
+      <div class="scenarios" id="scenario-list"></div>
+    </section>
+
+    <!-- ---- Env vars ---- -->
+    <section class="panel p-env" aria-label="Ollama 環境變數一鍵複製">
+      <div class="panel__head">
+        <i data-lucide="terminal" aria-hidden="true"></i>
+        <h2>Ollama 環境變數一鍵複製</h2>
+        <button class="info info--inline" type="button" data-tip="模型體積 = params × 量化係數(Q4≈0.625) · 單人 KV = KV_UNIT × params × tokens × 精度 · 併發上限 = ⌊(VRAM − 模型 − 1.5G) ÷ 單人 KV⌋ · 數值為面向初學者之工程估算。" aria-label="計算方法論"><i data-lucide="info" aria-hidden="true"></i></button>
+      </div>
+      <div class="env__grid">
+        <div class="codecard">
+          <div class="codecard__bar">
+            <span><i data-lucide="square-terminal" aria-hidden="true"></i> PowerShell</span>
+            <button class="copy" id="copy-ps" data-target="env-powershell"><i data-lucide="copy" aria-hidden="true"></i><span>複製</span></button>
+          </div>
+          <pre class="mono" id="env-powershell"></pre>
+        </div>
+        <div class="codecard">
+          <div class="codecard__bar">
+            <span><i data-lucide="square-terminal" aria-hidden="true"></i> Linux Bash</span>
+            <button class="copy" id="copy-bash" data-target="env-bash"><i data-lucide="copy" aria-hidden="true"></i><span>複製</span></button>
+          </div>
+          <pre class="mono" id="env-bash"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ Libraries ============ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
