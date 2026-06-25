@@ -555,7 +555,6 @@ function initMotion() {
   document.body.classList.remove('preload');
   if (!hasGsap || reduced) return;
   const gsap = window.gsap;
-  gsap.from('.topbar', { y: -34, opacity: 0, duration: 0.5, ease: 'power3.out' });
   gsap.from('.panel', { y: 28, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out', clearProps: 'opacity,transform' });
 }
 

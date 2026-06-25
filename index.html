@@ -20,41 +20,6 @@
   <div class="grain" aria-hidden="true"></div>
   <div class="scanlines" aria-hidden="true"></div>
 
-  <!-- ============ Top bar ============ -->
-  <header class="topbar">
-    <div class="topbar__left">
-      <a class="brand" href="#">
-        <span class="brand__mark"><i data-lucide="cpu" aria-hidden="true"></i></span>
-        <span class="brand__text">
-          <strong>OLLAMA</strong><span>Capacity</span>
-        </span>
-      </a>
-      <p class="topbar__tag mono">不只算<b>容量</b>，更能算<b class="o">載量</b>。</p>
-    </div>
-    
-    <div class="topbar__center">
-      <div class="tb-field">
-        <label for="in-usecase">主要用途</label>
-        <div class="select select--tb">
-          <select id="in-usecase"></select>
-          <i data-lucide="chevron-down" aria-hidden="true"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="topbar__right">
-      <div class="tb-field">
-        <label for="in-users">同時在線人員</label>
-        <div class="tb-field__row">
-          <input type="range" id="in-users" min="1" max="16" step="1" value="2" />
-          <div class="tb-field__num">
-            <input type="number" id="in-users-num" min="1" max="256" value="2" class="num num--tb" />
-            <span class="unit">人</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
 
   <!-- ============ Dashboard ============ -->
   <main class="dash" id="dash">
@@ -71,16 +36,16 @@
         <div class="field">
           <label for="in-vram">GPU VRAM <span class="unit">GB</span></label>
           <div class="field__row">
-            <input type="range" id="in-vram" min="2" max="96" step="1" value="24" />
-            <input type="number" id="in-vram-num" min="1" max="1024" value="24" class="num" />
+            <input type="range" id="in-vram" min="8" max="256" step="8" value="24" />
+            <input type="number" id="in-vram-num" min="8" max="256" value="24" class="num" />
           </div>
         </div>
 
         <div class="field">
           <label for="in-ram">系統 RAM <span class="unit">GB</span></label>
           <div class="field__row">
-            <input type="range" id="in-ram" min="4" max="256" step="4" value="32" />
-            <input type="number" id="in-ram-num" min="1" max="4096" value="32" class="num" />
+            <input type="range" id="in-ram" min="8" max="256" step="8" value="32" />
+            <input type="number" id="in-ram-num" min="8" max="256" value="32" class="num" />
           </div>
         </div>
       </section>
@@ -95,6 +60,22 @@
             <span class="switch__track"><span class="switch__thumb"></span></span>
             <span class="switch__label">專家模式</span>
           </label>
+        </div>
+
+        <div class="field">
+          <label for="in-usecase">主要用途</label>
+          <div class="select">
+            <select id="in-usecase"></select>
+            <i data-lucide="chevron-down" aria-hidden="true"></i>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="in-users">在線人員 <span class="unit">人</span></label>
+          <div class="field__row">
+            <input type="range" id="in-users" min="1" max="16" step="1" value="2" />
+            <input type="number" id="in-users-num" min="1" max="256" value="2" class="num" />
+          </div>
         </div>
 
         <div class="field">
@@ -241,11 +222,11 @@
 
       <!-- 自動優化 -->
       <div class="autoopt" id="autoopt">
-        <i data-lucide="wand-sparkles" aria-hidden="true"></i>
-        <div style="flex: 1; min-width: 0;">
+        <div class="autoopt__head">
+          <i data-lucide="wand-sparkles" aria-hidden="true"></i>
           <strong>啟動優化建議</strong>
-          <div id="autoopt-list" class="autoopt-list"></div>
         </div>
+        <div id="autoopt-list" class="autoopt-list"></div>
       </div>
     </section>
 
@@ -283,41 +264,45 @@
       </div>
     </section>
 
-    <!-- ---- Formulas & References ---- -->
-    <section class="panel p-ref" aria-label="計算公式與參考來源">
+    <!-- ---- Formulas ---- -->
+    <section class="panel p-formula" aria-label="容量評估公式">
       <div class="panel__head">
-        <i data-lucide="book-marked" aria-hidden="true"></i>
-        <h2>計算公式與參考來源</h2>
+        <i data-lucide="calculator" aria-hidden="true"></i>
+        <h2>容量評估公式</h2>
       </div>
       <div class="ref__content">
-        <div class="ref__section">
-          <h3><i data-lucide="calculator" aria-hidden="true"></i> 容量評估公式</h3>
-          <ul class="ref__list">
-            <li>
-              <strong>模型大小 (GB)</strong> 
-              <code>Params × Bytes_Per_Param</code>
-              <span class="ref__desc">FP16 ≈ 2.0G/B, Q8 ≈ 1.06G/B, Q5 ≈ 0.69G/B, Q4 ≈ 0.625G/B</span>
-            </li>
-            <li>
-              <strong>單人 KV Cache (GB)</strong> 
-              <code>Params × Context × KV_Unit × Precision</code>
-              <span class="ref__desc">預設 KV_Unit 為每 B 參數每 Token 耗費約 1.025e-6 GB。精度乘數：FP16 = 1.0, Q8 = 0.5, Q4 = 0.25</span>
-            </li>
-            <li>
-              <strong>顯存總需求 (GB)</strong>
-              <code>模型大小 × N + 單人 KV × 併發數 + 1.5G (預留)</code>
-              <span class="ref__desc">系統預留 1.5 GB 用於 CUDA 初始化及運算激活空間。</span>
-            </li>
-          </ul>
-        </div>
-        <div class="ref__section">
-          <h3><i data-lucide="library" aria-hidden="true"></i> 參考文獻與工程來源</h3>
-          <ul class="ref__links">
-            <li><a href="https://github.com/ollama/ollama/blob/main/docs/faq.md" target="_blank" rel="noopener"><i data-lucide="github"></i> Ollama Concurrency Docs</a></li>
-            <li><a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener"><i data-lucide="external-link"></i> llama.cpp Quantization Benchmarks</a></li>
-            <li><a href="https://arxiv.org/abs/2305.13245" target="_blank" rel="noopener"><i data-lucide="file-text"></i> GQA: Grouped-Query Attention Paper</a></li>
-          </ul>
-        </div>
+        <ul class="ref__list">
+          <li>
+            <strong>模型大小 (GB)</strong> 
+            <code>Params × Bytes_Per_Param</code>
+            <span class="ref__desc">FP16 ≈ 2.0G/B, Q8 ≈ 1.06G/B, Q5 ≈ 0.69G/B, Q4 ≈ 0.625G/B</span>
+          </li>
+          <li>
+            <strong>單人 KV Cache (GB)</strong> 
+            <code>Params × Context × KV_Unit × Precision</code>
+            <span class="ref__desc">預設 KV_Unit 為每 B 參數每 Token 耗費約 1.025e-6 GB。精度乘數：FP16 = 1.0, Q8 = 0.5, Q4 = 0.25</span>
+          </li>
+          <li>
+            <strong>顯存總需求 (GB)</strong>
+            <code>模型大小 × N + 單人 KV × 併發數 + 1.5G (預留)</code>
+            <span class="ref__desc">系統預留 1.5 GB 用於 CUDA 初始化及運算激活空間。</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ---- References ---- -->
+    <section class="panel p-links" aria-label="參考文獻與工程來源">
+      <div class="panel__head">
+        <i data-lucide="book-marked" aria-hidden="true"></i>
+        <h2>參考文獻與工程來源</h2>
+      </div>
+      <div class="ref__content">
+        <ul class="ref__links">
+          <li><a href="https://github.com/ollama/ollama/blob/main/docs/faq.md" target="_blank" rel="noopener"><i data-lucide="github"></i> Ollama Concurrency Docs</a></li>
+          <li><a href="https://github.com/ggerganov/llama.cpp" target="_blank" rel="noopener"><i data-lucide="external-link"></i> llama.cpp Quantization Benchmarks</a></li>
+          <li><a href="https://arxiv.org/abs/2305.13245" target="_blank" rel="noopener"><i data-lucide="file-text"></i> GQA: Grouped-Query Attention Paper</a></li>
+        </ul>
       </div>
     </section>
   </main>
